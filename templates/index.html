@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+<title>{% block title %} CRUD | Home{% endblock %}</title>
+{% block body %}
+<div class="container my-3">
+    <div class="row">
+        <div class="col md-12">
+            <div class="jumbotron p-1">
+                <div class="form-row">
+                    <div class="form-group col-md-6 mr-auto">
+                        <h4>Manage <b>Employees </b></h4>
+                    </div>
+                    <div class="form-inline my-2 my-lg-0">
+                        <input class="form-control mr-sm-2" style="d-flex" type="text" placeholder="Search Records.."
+                            id="searchtxt" onkeyup="searchrecords();">
+                        <button class="btn btn-outline-success btn-sm mr-sm-2" type="button"
+                            onclick="cleartxt();">Clear</button>
+                    </div>
+                </div>
+
+                <div class="col my-4">
+                    <form method="POST"> {% csrf_token %}
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="name">Name</label>
+                                <input type="text" class="form-control my-0" id="empname" name="name"
+                                    placeholder="Name">
+                                <span id="validName" class="text-danger text-bold ml-2"></span>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="pannum">PAN Number</label>
+                                <input type="text" class="form-control my-0" id="emppan" name="pannum"
+                                    placeholder="PAN Number">
+                                <span id="validPanNum" class="text-danger text-bold ml-2"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="age">Age</label>
+                                <input type="number" class="form-control my-0" id="empage" name="age" placeholder="Age">
+                                <span id="validAge" class="text-danger text-bold ml-2"></span>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="gender">Gender</label>
+                                <select name="gender" id="empgender" class="form-control my-0">
+                                    <option disabled="true" selected>--select gender--</option>
+                                    {% for empgender in genders %}
+                                    <option>{{empgender.gender}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="city">City</label>
+                                <select name="city" id="empcity" class="form-control my-0">
+                                    <option disabled="true" selected>--select city--</option>
+                                    {% for empcity in cities %}
+                                    <option>{{empcity.City}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="email">Email</label>
+                                <input type="text" class="form-control my-0" id="empemail" name="email"
+                                    placeholder="Email">
+                                <span id="validEmail" class="text-danger text-weight-bold ml-2"></span>
+                            </div>
+                        </div>
+                        <button type="button " id="submit" class="btn btn-success">Insert</button>
+                    </form>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="row t20">
+
+        <div class="col md-12">
+
+            <div class="jumbotron p-3">
+
+                <h4>Employe Details
+
+                    <!-- pagination -->
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination float-right">
+                            {% if emps.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ users.previous_page_number }}"
+                                    aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                                {% else %}
+                            <li class="disabled"><span>«</span></li>
+                            </li>
+                            {% endif %}
+                            {% for i in emps.paginator.page_range %}
+                            {% if emps.number == i%}
+                            <li class="active"><span>{{ i }} </span></li>
+                            {% else %}
+                            <li class="page-item "><a class="page-link" href="?page={{ i }}">{{i}}</a></li>
+                            {% endif %}
+                            {% endfor %}
+                            {% if emps.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ users.next_page_number }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="disabled"><span>»</span></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    <!-- end pagination  -->
+                </h4>
+
+                {% if emps %}
+                <table class="table table-hover table-dark table-sortable" id="emptable">
+                    <!-- Name, Pan Number, Age, Gender, Email, City, Action -->
+                    <!-- Ø  The grid is sortable on name, pan number and city. -->
+                    <tr>
+                        <th>Id</th>
+                        <th>Name </th>
+                        <th>Pan Number </th>
+                        <th>Age </th>
+                        <th>Gender </th>
+                        <th>Email </th>
+                        <th>City </th>
+                        <th>Action</th>
+
+                    </tr>
+
+                    {% for emp in emp_list %}
+                    <tr>
+                        <td>{{emp.id}}</td>
+                        <td>{{emp.name}}</td>
+                        <td>{{emp.pannum}}</td>
+                        <td>{{emp.age}}</td>
+                        <td>{{emp.gender}}</td>
+                        <td>{{emp.email}}</td>
+                        <td>{{emp.city}}</td>
+
+                        <td>
+                            <input type="button" class="btn btn-warning btn-sm" data-toggle="modal"
+                                data-target="#modaledit{{emp.id}}" value="Edit" data-id={{emp.id}}>
+                            <a href="/delete/{{emp.id}}" class="btn btn-danger btn-sm">Delete</a>
+                        </td>
+                    </tr>
+
+                    <!-- Modal Edit Employee-->
+                    <div id="modaledit{{emp.id}}" class="modal fade" role="dialog">
+                        <div class="modal-dialog">
+
+
+                            <div class="modal-content">
+
+
+                                <div class="modal-header">
+
+
+                                    <h4 class="modal-title">Update Information</h4>
+
+
+                                </div>
+
+
+                                <div class="modal-body">
+
+
+                                    <form action="/update/{{emp.id}}" method="POST" enctype="multipart/form-data">
+                                        {%csrf_token %}
+
+
+                                        <div class="form-group">
+
+
+                                            <label>Email:</label>
+
+                                            <input type="text" class="form-control" name="email" value="{{emp.email}}">
+
+
+                                        </div>
+
+
+                                        <div class="form-group">
+
+
+                                            <label>City:</label>
+                                            <select name="city" id="empcity" class="form-control my-0">
+                                                <option disabled="true" selected>{{emp.city}}</option>
+                                                {% for empcity in cities %}
+                                                <option>{{empcity.City}}</option>
+                                                {% endfor %}
+                                            </select>
+
+                                        </div>
+
+
+                                        <div class="form-group">
+
+
+                                            <button class="btn btn-primary btn-sm" type="submit">Update</button>
+
+
+                                        </div>
+
+
+                                    </form>
+
+
+                                </div>
+
+
+                                <div class="modal-footer">
+
+
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+
+                                </div>
+
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </table>
+                {% else %}
+                <h5 class="alert alert-warning">No Records Found </h5>
+                {% endif %}
+
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}
+
+<script>
+    {% block js %}
+    // Search data from DB table 
+    function searchrecords() {
+        var input, table, tr, td, filter, i, textdata;
+        input = document.getElementById('searchtxt');
+        filter = input.value.toLowerCase();
+        table = document.getElementById('emptable');
+        tr = table.getElementsByTagName('tr');
+        for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName('td')[1];
+            td = tr[i].getElementsByTagName('td')[2];
+            td = tr[i].getElementsByTagName('td')[3];
+            td = tr[i].getElementsByTagName('td')[4];
+            td = tr[i].getElementsByTagName('td')[5];
+            td = tr[i].getElementsByTagName('td')[6];
+
+            if (td) {
+                textdata = td.innerText;
+                if (textdata.toLowerCase().indexOf(filter) > -1) {
+                    tr[i].style.display = '';
+                }
+                else {
+                    tr[i].style.display = 'none'
+
+
+                }
+            }
+        }
+
+
+    }
+
+    // Clear data from serachTxt 
+    function cleartxt() {
+        document.getElementById('searchtxt').value = '';
+        document.getElementById('searchtxt').focus();
+        window.location.reload();
+    }
+
+    // Inserted data into DB by onclick of add button
+    $(document).ready(function () {
+        $('#submit').on('click', function (e) {
+            e.preventDefault();
+            $name = $('#empname').val();
+            $pannum = $('#emppan').val();
+            $age = $('#empage').val();
+            $gender = $('#empgender').val();
+            $city = $('#empcity').val();
+            $email = $('#empemail').val();
+
+            // Regex for emp_name
+            var namePattern = /^[a-zA-Z\s]*$/;
+            // Regex for emp PAN Number 
+            var panNumPattern = /^[a-z0-9]+$/i;
+            // Regex for emp_age 
+            var agePattern = /^[1-9][0-9]?$|^100$/;
+            // Regex for emp_email
+            var emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+
+
+            if ($name == "" || $pannum == "" || $age == "" || $gender == "" || $city == "" || $email == "") {
+                document.getElementById('validName').innerHTML = '**Only alphabet with space, no leading and trailing spaces.';
+                document.getElementById('validPanNum').innerHTML = '**Only alphanumeric allowed and unique for each employee.'
+                document.getElementById('validAge').innerHTML = '**Age must be 1-100.'
+                document.getElementById('validEmail').innerHTML = '**Only valid email string.'
+
+            } else {
+                if (namePattern.test($name) || panNumPattern.test($pannum) || agePattern.test($age) || emailPattern.test($email)) {
+                    $.ajax({
+                        type: "POST",
+                        url: "insert",
+                        data: {
+                            name: $name,
+                            pannum: $pannum,
+                            age: $age,
+                            gender: $gender,
+                            city: $city,
+                            email: $email,
+                            csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+                        },
+
+                        success: function () {
+                            alert('Save Data');
+                            $('#empname').val('');
+                            $('#emppan').val('');
+                            $('#empage').val('');
+                            $('#empgender').val('');
+                            $('#empcity').val('');
+                            $('#empemail').val('');
+                            window.location = "/";
+                        }
+
+                    });
+                }
+
+            }
+        });
+
+        // Check PAN Number has already existed or not 
+        $("#emppan").change(function () {
+            var PanNumber = $(this).val();
+
+            $.ajax({
+                url: '/validate_PanNumber/',
+                data: {
+                    'pannum': PanNumber
+                },
+                dataType: 'json',
+                success: function (data) {
+                    if (data.is_taken) {
+                        alert(`Employee with this ${PanNumber} PAN Number already exists.`);
+                    }
+                }
+            });
+
+        });
+    });
+
+    {% endblock %}
+</script>
